@@ -2,10 +2,9 @@ package com.example.coolweather;
 
 
 import android.app.ProgressDialog;
+import android.content.Intent;
 import android.os.Bundle;
-import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -69,16 +68,16 @@ public class ChooseAreaFragment extends Fragment{
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.choose_area, container,false);
-        titleText = (TextView) view.findViewById(R.id.title_text);
-        backButton = (Button) view.findViewById(R.id.back_button);
-        listView = (ListView) view.findViewById(R.id.list_view);
-        adapter = new ArrayAdapter<String>(getContext(), android.R.layout.simple_list_item_1,dataList);
+        titleText = view.findViewById(R.id.title_text);
+        backButton = view.findViewById(R.id.back_button);
+        listView = view.findViewById(R.id.list_view);
+        adapter = new ArrayAdapter<>(getContext(), android.R.layout.simple_list_item_1,dataList);
         listView.setAdapter(adapter);
         return view;
     }
 
     @Override
-    public void onActivityCreated(@Nullable Bundle savedInstanceState) {
+    public void onActivityCreated(Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
@@ -89,6 +88,12 @@ public class ChooseAreaFragment extends Fragment{
                 } else if(currentLevel == LEVEL_CITY) {
                     selectedCity = cityList.get(positin);
                     queryCounties();
+                } else if(currentLevel == LEVEL_COUNTY) {
+                    String weatherId= countyList.get(positin).getWeatherId();
+                    Intent intent = new Intent(getActivity(), WeatherActivity.class);
+                    intent.putExtra("weather_id", weatherId);
+                    startActivity(intent);
+                    getActivity().finish();
                 }
             }
         });
@@ -128,7 +133,6 @@ public class ChooseAreaFragment extends Fragment{
         titleText.setText(selectedProvince.getProvinceName());
         backButton.setVisibility(View.VISIBLE);
         cityList = DataSupport.where("provinceid = ?", String.valueOf(selectedProvince.getId())).find(City.class);
-        Log.i("infor", "" + cityList.size());
         if (cityList.size() > 0) {
             dataList.clear();
             for(City city : cityList) {
@@ -149,7 +153,6 @@ public class ChooseAreaFragment extends Fragment{
         titleText.setText(selectedCity.getCityName());
         backButton.setVisibility(View.VISIBLE);
         countyList = DataSupport.where("cityid = ?", String.valueOf(selectedCity.getId())).find(County.class);
-        Log.i(TAG, "queryCounties: " + countyList.size());
         if (countyList.size() > 0) {
             dataList.clear();
             for(County county : countyList) {
@@ -179,7 +182,6 @@ public class ChooseAreaFragment extends Fragment{
                     result = Utility.handleProvinceResponse(responseText);
                 } else if ("city".equals(type)) {
                     result = Utility.handleCityResponse(responseText, selectedProvince.getId());
-                    Log.i(TAG, "onResponse: " + result);
                 } else if ("county".equals(type)) {
                     result = Utility.handleCountyResponse(responseText, selectedCity.getId());
                 }
