@@ -1,5 +1,6 @@
 package com.example.coolweather;
 
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.os.Build;
@@ -21,6 +22,7 @@ import android.widget.Toast;
 import com.bumptech.glide.Glide;
 import com.example.coolweather.gson.Forecast;
 import com.example.coolweather.gson.Weather;
+import com.example.coolweather.service.AutoUpdateService;
 import com.example.coolweather.util.HttpUtil;
 import com.example.coolweather.util.Utility;
 
@@ -88,6 +90,7 @@ public class WeatherActivity extends AppCompatActivity {
         carWashText = (TextView) findViewById(R.id.car_wash_text);
         sporttext = (TextView) findViewById(R.id.sport_text);
 
+        // 刷新
         swipeRefresh = (SwipeRefreshLayout) findViewById(R.id.swipe_refresh);
         swipeRefresh.setColorSchemeResources(R.color.colorPrimary);
 
@@ -101,12 +104,13 @@ public class WeatherActivity extends AppCompatActivity {
         });
 
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
-        String bingPic = prefs.getString("bing_pic", null);
+        /*String bingPic = prefs.getString("bing_pic", null);
         if (bingPic != null) {
             Glide.with(this).load(bingPic).into(bingPicImg);
         } else {
             loadBingPic();
-        }
+        }*/
+        Glide.with(this).load("http://area.sinaapp.com/bingImg").into(bingPicImg);
 
         String weatherString = prefs.getString("weather", null);
         if(weatherString != null) {
@@ -152,7 +156,7 @@ public class WeatherActivity extends AppCompatActivity {
                         swipeRefresh.setRefreshing(false);
                     }
                 });
-                loadBingPic();
+                // loadBingPic();
             }
 
             @Override
@@ -170,6 +174,8 @@ public class WeatherActivity extends AppCompatActivity {
 
     // 处理并展示 Weather 实体类中的数据
     private void showWeatherInfo(Weather weather) {
+        Intent intent = new Intent(this, AutoUpdateService.class);
+        startService(intent);
         String cityName = weather.basic.cityName;
         String updateTime = weather.basic.update.updateTime.split(" ")[1];
         String degree = weather.now.temperature + "℃";
@@ -208,7 +214,7 @@ public class WeatherActivity extends AppCompatActivity {
     }
 
     // 加载必应每日一图
-    private void loadBingPic() {
+    /*private void loadBingPic() {
         String requestBingPic = "http://guolin.tech/api/bing_pic";
         HttpUtil.sendOkHttpResquest(requestBingPic, new Callback() {
 
@@ -232,7 +238,5 @@ public class WeatherActivity extends AppCompatActivity {
                 e.printStackTrace();
             }
         });
-
-
-    }
+    }*/
 }

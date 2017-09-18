@@ -231,6 +231,7 @@ public class ChooseAreaFragment extends Fragment{
             progressDialog.setMessage("正在加载...");
             progressDialog.setCanceledOnTouchOutside(false);
         }
+        progressDialog.show();
     }
 
     // 关闭进度对话框
