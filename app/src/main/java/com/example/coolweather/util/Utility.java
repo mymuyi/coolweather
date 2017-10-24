@@ -84,6 +84,21 @@ public class Utility {
     }
 
     /**
+     * 解析必应图片返回的数据
+     */
+    public static String handlerBiyingResponde(String response) {
+        try {
+            JSONObject jsonObject = new JSONObject(response);
+            JSONArray jsonArray = jsonObject.getJSONArray("images");
+            String bingPic = "http://cn.bing.com" + jsonArray.getJSONObject(0).getString("url");
+            return bingPic;
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return "no";
+    }
+
+    /**
      * 将返回的 JSON 数据解析成 Weather 实体类
      */
     public static Weather handlerWeatherResponse(String response) {

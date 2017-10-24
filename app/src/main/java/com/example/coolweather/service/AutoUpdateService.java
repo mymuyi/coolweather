@@ -33,9 +33,9 @@ public class AutoUpdateService extends Service {
     public int onStartCommand(Intent intent, int flags, int startId) {
         updateWeather();
         //updateBingPic();
-        Log.i("infor", "onStartCommand: ");
+        Log.i("infor1", "onStartCommand: ");
         AlarmManager manager = (AlarmManager) getSystemService(ALARM_SERVICE);
-        int anHour = 60 * 60 * 1000; // 每隔一小时更新
+        int anHour = 20 * 60 * 1000; // 每隔一小时更新
         long triggerAtTime = SystemClock.elapsedRealtime() + anHour;
         Intent i = new Intent(this, AutoUpdateService.class);
         PendingIntent pi = PendingIntent.getService(this, 0, i, 0);
@@ -65,6 +65,7 @@ public class AutoUpdateService extends Service {
                         SharedPreferences.Editor editor = PreferenceManager.getDefaultSharedPreferences
                                 (AutoUpdateService.this).edit();
                         editor.putString("weather", responseText);
+                        Log.i("infor1", responseText);
                         editor.apply();
                     }
                 }

@@ -1,6 +1,5 @@
 package com.example.coolweather;
 
-import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.os.Build;
@@ -10,6 +9,7 @@ import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.Button;
@@ -22,7 +22,6 @@ import android.widget.Toast;
 import com.bumptech.glide.Glide;
 import com.example.coolweather.gson.Forecast;
 import com.example.coolweather.gson.Weather;
-import com.example.coolweather.service.AutoUpdateService;
 import com.example.coolweather.util.HttpUtil;
 import com.example.coolweather.util.Utility;
 
@@ -69,6 +68,11 @@ public class WeatherActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        // 开启服务
+        //Intent intent = new Intent(this, AutoUpdateService.class);
+        //startService(intent);
+
         if (Build.VERSION.SDK_INT >= 21) {
             View decorView = getWindow().getDecorView();
             decorView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN |
@@ -92,7 +96,7 @@ public class WeatherActivity extends AppCompatActivity {
 
         // 刷新
         swipeRefresh = (SwipeRefreshLayout) findViewById(R.id.swipe_refresh);
-        swipeRefresh.setColorSchemeResources(R.color.colorPrimary);
+        swipeRefresh.setColorSchemeResources(R.color.colorAccent);
 
         drawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
         navButton = (Button) findViewById(R.id.nav_button);
@@ -104,22 +108,27 @@ public class WeatherActivity extends AppCompatActivity {
         });
 
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
-        /*String bingPic = prefs.getString("bing_pic", null);
+
+        String bingPic = prefs.getString("bing_pic", null);
         if (bingPic != null) {
+            Log.i("infor", "first");
             Glide.with(this).load(bingPic).into(bingPicImg);
-        } else {
+        } /*else {
             loadBingPic();
         }*/
-        Glide.with(this).load("http://area.sinaapp.com/bingImg").into(bingPicImg);
+
 
         String weatherString = prefs.getString("weather", null);
         if(weatherString != null) {
             // 有缓存时直接解析天气数据
+            Log.i("infor", "second");
             Weather weather = Utility.handlerWeatherResponse(weatherString);
             mWeatherId = weather.basic.weatherId;
             showWeatherInfo(weather);
+            requestWeather(mWeatherId);
         } else {
             // 无缓存时去服务器查询天气
+            Log.i("infor", "third");
             mWeatherId = getIntent().getStringExtra("weather_id");
             weatherLayout.setVisibility(View.INVISIBLE);
             requestWeather(mWeatherId);
@@ -132,7 +141,10 @@ public class WeatherActivity extends AppCompatActivity {
         });
     }
 
-    // 根据天气 id 请求城市天气信息
+    /**
+     * 根据天气 id 请求城市天气信息
+      */
+
     public void requestWeather(final String weatherId) {
         String weatherUrl = "http://guolin.tech/api/weather?cityid=" + weatherId + "&key=3004ebb906264917a85a4c64deec0569";
         HttpUtil.sendOkHttpResquest(weatherUrl, new Callback() {
@@ -148,6 +160,7 @@ public class WeatherActivity extends AppCompatActivity {
                                     (WeatherActivity.this).edit();
                             editor.putString("weather", responseText);
                             editor.apply();
+                            mWeatherId = weather.basic.weatherId;
                             showWeatherInfo(weather);
                         } else {
                             Toast.makeText(WeatherActivity.this, "获取天气信息失败",Toast.LENGTH_SHORT).show();
@@ -156,7 +169,6 @@ public class WeatherActivity extends AppCompatActivity {
                         swipeRefresh.setRefreshing(false);
                     }
                 });
-                // loadBingPic();
             }
 
             @Override
@@ -170,12 +182,14 @@ public class WeatherActivity extends AppCompatActivity {
                 });
             }
         });
+        loadBingPic();
     }
 
-    // 处理并展示 Weather 实体类中的数据
+    /**
+     * 处理并展示 Weather 实体类中的数据
+      */
+
     private void showWeatherInfo(Weather weather) {
-        Intent intent = new Intent(this, AutoUpdateService.class);
-        startService(intent);
         String cityName = weather.basic.cityName;
         String updateTime = weather.basic.update.updateTime.split(" ")[1];
         String degree = weather.now.temperature + "℃";
@@ -213,14 +227,27 @@ public class WeatherActivity extends AppCompatActivity {
         weatherLayout.setVisibility(View.VISIBLE);
     }
 
-    // 加载必应每日一图
-    /*private void loadBingPic() {
-        String requestBingPic = "http://guolin.tech/api/bing_pic";
+    /**
+     * 加载必应每日一图
+      */
+
+    private void loadBingPic() {
+
+        /*Glide.with(this)
+                .load("http://117.48.201.207/pac1.jpg")
+                .diskCacheStrategy(DiskCacheStrategy.NONE) // 禁止缓存
+                .into(bingPicImg);*/
+
+        String requestBingPic = "http://www.bing.com/HPImageArchive.aspx?format=js&idx=0&n=1";
         HttpUtil.sendOkHttpResquest(requestBingPic, new Callback() {
 
             @Override
             public void onResponse(Call call, Response response) throws IOException {
-                final String bingPic = response.body().string();
+                final String bingPicText = response.body().string();
+
+                final String bingPic = Utility.handlerBiyingResponde(bingPicText);
+                Log.i("infor", bingPic);
+
                 SharedPreferences.Editor editor = PreferenceManager.getDefaultSharedPreferences
                         (WeatherActivity.this).edit();
                 editor.putString("bing_pic", bingPic);
@@ -235,8 +262,9 @@ public class WeatherActivity extends AppCompatActivity {
 
             @Override
             public void onFailure(Call call, IOException e) {
-                e.printStackTrace();
+
             }
         });
-    }*/
+    }
+
 }
